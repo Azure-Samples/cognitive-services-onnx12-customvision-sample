@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.AI.MachineLearning.Preview;
+using Windows.AI.MachineLearning;
 using Windows.Storage;
 using Windows.Media;
 using Windows.Graphics.Imaging;
@@ -15,9 +15,9 @@ using Windows.Storage.Pickers;
 using Windows.UI.Xaml.Media.Imaging;
 
 /// <summary>
-/// How to CHANGE onnx model for this sample application.
-/// 1) Copy new onnx model to "Assets" subfolder.
-/// 2) Add model to "Project" under Assets folder by selecting "Add existing item"; navigate to new onnx model and add.
+/// How to CHANGE ONNX model for this sample application.
+/// 1) Copy new ONNX model to "Assets" subfolder.
+/// 2) Add model to "Project" under Assets folder by selecting "Add existing item"; navigate to new ONNX model and add.
 ///    Change properties "Build-Action" to "Content"  and  "Copy to Output Directory" to "Copy if Newer"
 /// 3) Update the inialization of the variable "_ourOnnxFileName" to the name of the new model.
 /// 4) In the constructor for OnnxModelOutput update the number of expected output labels.
@@ -32,42 +32,31 @@ namespace SampleOnnxEvaluationApp
     {
         private Stopwatch _stopwatch = new Stopwatch();
         private OnnxModel _model = null;
-        private string _ourOnnxFileName = "PlanktonModel.onnx";
+        private string _ourOnnxFileName = "onnx12.onnx";
 
         public sealed class OnnxModelInput
         {
-            public VideoFrame data { get; set; }
+            public VideoFrame Data { get; set; }
         }
 
-        public sealed class OnnxModelOutput
+        public sealed class ModelOutput
         {
-            public IList<string> classLabel { get; set; }
-            public IDictionary<string, float> loss { get; set; }
-            public OnnxModelOutput()
-            {
-                this.classLabel = new List<string>();
-
-                // For dictionary(map) fields onnx needs the variable to be pre-allocatd such that the 
-                // length is equal to the number of labels defined in the model. The names are not
-                // required to match what is in the model.
-                this.loss = new Dictionary<string, float>();
-                for (int x = 0; x < 5; ++x)
-                    this.loss.Add("Label_" + x.ToString(), 0.0f);
-            }
+            public TensorString ClassLabel = TensorString.Create(new long[] { 1, 1 });
+            public IList<IDictionary<string, float>> Loss = new List<IDictionary<string, float>>();
         }
 
         public sealed class OnnxModel
         {
-            private LearningModelPreview learningModel = null;
-            private int numLabels = -1;
+            private LearningModel _learningModel = null;
+            private LearningModelSession _session;
 
             public static async Task<OnnxModel> CreateOnnxModel(StorageFile file)
             {
-                LearningModelPreview learningModel = null;
+                LearningModel learningModel = null;
 
                 try
                 {
-                    learningModel = await LearningModelPreview.LoadModelFromStorageFileAsync(file);
+                    learningModel = await LearningModel.LoadFromStorageFileAsync(file);
                 }
                 catch (Exception e)
                 {
@@ -75,22 +64,22 @@ namespace SampleOnnxEvaluationApp
                     System.Console.WriteLine(exceptionStr);
                     throw e;
                 }
-                OnnxModel model = new OnnxModel();
-                learningModel.InferencingOptions.PreferredDeviceKind = LearningModelDeviceKindPreview.LearningDeviceGpu;
-                learningModel.InferencingOptions.ReclaimMemoryAfterEvaluation = true;
-
-                model.learningModel = learningModel;
-                return model;
+                return new OnnxModel()
+                {
+                    _learningModel = learningModel,
+                    _session = new LearningModelSession(learningModel)
+                };
             }
 
-            public async Task<OnnxModelOutput> EvaluateAsync(OnnxModelInput input)
+            public async Task<ModelOutput> EvaluateAsync(OnnxModelInput input)
             {
-                OnnxModelOutput output = new OnnxModelOutput();
-                LearningModelBindingPreview binding = new LearningModelBindingPreview(learningModel);
-                binding.Bind("data", input.data);
-                binding.Bind("classLabel", output.classLabel);
-                binding.Bind("loss", output.loss);
-                LearningModelEvaluationResultPreview evalResult = await learningModel.EvaluateAsync(binding, string.Empty);
+                var output = new ModelOutput();
+                var binding = new LearningModelBinding(_session);
+                binding.Bind("data", input.Data);
+                binding.Bind("classLabel", output.ClassLabel);
+                binding.Bind("loss", output.Loss);
+                LearningModelEvaluationResult evalResult = await _session.EvaluateAsync(binding, "0");
+
                 return output;
             }
         }
@@ -131,7 +120,7 @@ namespace SampleOnnxEvaluationApp
                 if (_model == null)
                 {
                     // Load the model
-                    await Task.Run(async () => await LoadModelAsync());
+                    await LoadModelAsync();
                 }
 
                 // Trigger file picker to select an image file
@@ -140,6 +129,8 @@ namespace SampleOnnxEvaluationApp
                 fileOpenPicker.FileTypeFilter.Add(".bmp");
                 fileOpenPicker.FileTypeFilter.Add(".jpg");
                 fileOpenPicker.FileTypeFilter.Add(".png");
+                fileOpenPicker.FileTypeFilter.Add(".jpeg");
+                fileOpenPicker.FileTypeFilter.Add(".gif");
                 fileOpenPicker.ViewMode = PickerViewMode.Thumbnail;
                 StorageFile selectedStorageFile = await fileOpenPicker.PickSingleFileAsync();
 
@@ -158,20 +149,17 @@ namespace SampleOnnxEvaluationApp
                 SoftwareBitmapSource imageSource = new SoftwareBitmapSource();
                 await imageSource.SetBitmapAsync(softwareBitmap);
                 UIPreviewImage.Source = imageSource;
-
                 // Encapsulate the image in the WinML image type (VideoFrame) to be bound and evaluated
                 VideoFrame inputImage = VideoFrame.CreateWithSoftwareBitmap(softwareBitmap);
-
-                await Task.Run(async () =>
-                {
-                    // Evaluate the image
-                    await EvaluateVideoFrameAsync(inputImage);
-                });
+                // Evaluate the image
+                await EvaluateVideoFrameAsync(inputImage);
+                
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"error: {ex.Message}");
-                await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => StatusBlock.Text = $"error: {ex.Message}");
+                var err_message = $"error: {ex.Message}";
+                Debug.WriteLine(err_message);
+                await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => StatusBlock.Text = err_message);
             }
             finally
             {
@@ -187,24 +175,24 @@ namespace SampleOnnxEvaluationApp
                 {
                     _stopwatch.Restart();
                     OnnxModelInput inputData = new OnnxModelInput();
-                    inputData.data = frame;
-                    var results = await _model.EvaluateAsync(inputData);
-                    var loss = results.loss.ToList().OrderBy(x=>-(x.Value));
-                    var labels = results.classLabel;
+                    inputData.Data = frame;
+                    var output = await _model.EvaluateAsync(inputData);
+
+                    var product = output.ClassLabel.GetAsVectorView()[0];
+                    var loss = output.Loss[0][product];
                     _stopwatch.Stop();
 
-                    var lossStr = string.Join(",  ", loss.Select(l => l.Key + " " + (l.Value * 100.0f).ToString("#0.00") + "%"));
+                    var lossStr = string.Join(",  ", product + " " + (loss * 100.0f).ToString("#0.00") + "%");
                     string message = $"Evaluation took {_stopwatch.ElapsedMilliseconds}ms to execute, Predictions: {lossStr}.";
                     Debug.WriteLine(message);
                     await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => StatusBlock.Text = message);
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine($"error: {ex.Message}");
-                    await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => StatusBlock.Text = $"error: {ex.Message}");
+                    var err_message = $"error: {ex.Message}";
+                    Debug.WriteLine(err_message);
+                    await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => StatusBlock.Text = err_message);
                 }
-
-                await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => ButtonRun.IsEnabled = true);
             }
         }
     }
