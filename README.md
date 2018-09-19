@@ -20,7 +20,7 @@ This sample application demonstrates how to take a model exported from the [Cust
 2. Build and run the sample Application
 3. Application comes with two models already included along with sample images to test.
 ### Adding your own sample model of your own classifier.
-The models provided with the sample recognizes cat/dog images. To add  your own model exported from the [Custom Vision Service](https://www.customvision.ai) do the following, and then build and launch the application:
+The models provided with the sample recognizes Hemlock/Japanese Cherry images. To add  your own model exported from the [Custom Vision Service](https://www.customvision.ai) do the following, and then build and launch the application:
   1. [Create and train](https://docs.microsoft.com/en-us/azure/cognitive-services/custom-vision-service/getting-started-build-a-classifier) a classifer with the Custom Vision Service. You must choose a "compact" domain such as **General (compact)** to be able to export your classifier. If you have an existing classifier you want to export instead, convert the domain in "settings" by clicking on the gear icon at the top right. In setting, choose a "compact" model, Save, and Train your project.  
   2. Export your model by going to the Performance tab. Select an iteration trained with a compact domain, an "Export" button will appear. Click on *Export* then *ONNX* then *ONNX1.2* then *Export.* Click the *Download* button when it appears. A *.onnx file will download.
   3. Drop your *model.onnx file into your project's Assets folder. 
