@@ -10,19 +10,20 @@ This sample application demonstrates how to take a model exported from the [Cust
 ## Getting Started
 
 ### Prerequisites
-- [Windows SDK - Build 17738+] (latest)](https://www.microsoft.com/en-us/software-download/windowsinsiderpreviewSDK)
+- [Windows SDK - Build 17738+ (latest)] (https://www.microsoft.com/en-us/software-download/windowsinsiderpreviewSDK)
 - [Visual Studio 17](https://www.visualstudio.com/vs/preview/)
 - [Windows 10 Insider Preview 17738+](https://www.microsoft.com/en-us/software-download/windowsinsiderpreviewiso)
 - An account at [Custom Vision Service](https://www.customvision.ai) 
-### Quickstart
 
-1. clone the repository and open the project in Visual Studio
+### Quickstart
+1. Clone the repository and open the project in Visual Studio
 2. Build and run the sample Application
 3. Application comes with two models already included along with sample images to test.
-### Adding your own sample model of your own classifier.
+
+### Adding your own sample model of your own classifier
 The models provided with the sample recognizes Hemlock/Japanese Cherry images. To add  your own model exported from the [Custom Vision Service](https://www.customvision.ai) do the following, and then build and launch the application:
   1. [Create and train](https://docs.microsoft.com/en-us/azure/cognitive-services/custom-vision-service/getting-started-build-a-classifier) a classifer with the Custom Vision Service. You must choose a "compact" domain such as **General (compact)** to be able to export your classifier. If you have an existing classifier you want to export instead, convert the domain in "settings" by clicking on the gear icon at the top right. In setting, choose a "compact" model, Save, and Train your project.  
-  2. Export your model by going to the Performance tab. Select an iteration trained with a compact domain, an "Export" button will appear. Click on *Export* then *ONNX* then *ONNX1.2* then *Export.* Click the *Download* button when it appears. A *.onnx file will download.
+  2. [Export your model](https://docs.microsoft.com/en-us/azure/cognitive-services/custom-vision-service/export-your-model) by going to the Performance tab. Select an iteration trained with a compact domain, an "Export" button will appear. Click on *Export* then *ONNX* then *ONNX1.2* then *Export.* Click the *Download* button when it appears. A *.onnx file will download.
   3. Drop your *model.onnx file into your project's Assets folder. 
   4. Under Solutions Explorer/ Assets Folder add model file to project by selecting Add Existing Item.
   5. Change properties of model just added: "Build Action" -> "Content"  and  "Copy to Output Directory" -> "Copy if newer"
@@ -30,8 +31,8 @@ The models provided with the sample recognizes Hemlock/Japanese Cherry images. T
   7. Build and run.
   8. Click button to select image to evaluate.
 
-### Things to note.
-- Test image should larger than 227 x 227
+### Things to note
+- The test image should larger than 227 x 227
 
 
 ## Resources
