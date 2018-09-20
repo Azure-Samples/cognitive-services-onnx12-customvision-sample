@@ -10,7 +10,7 @@ This sample application demonstrates how to take a model exported from the [Cust
 ## Getting Started
 
 ### Prerequisites
-- [Windows SDK - Build 17738+ (latest)] (https://www.microsoft.com/en-us/software-download/windowsinsiderpreviewSDK)
+- [Windows SDK - Build 17738+ (latest)](https://www.microsoft.com/en-us/software-download/windowsinsiderpreviewSDK)
 - [Visual Studio 17](https://www.visualstudio.com/vs/preview/)
 - [Windows 10 Insider Preview 17738+](https://www.microsoft.com/en-us/software-download/windowsinsiderpreviewiso)
 - An account at [Custom Vision Service](https://www.customvision.ai) 
