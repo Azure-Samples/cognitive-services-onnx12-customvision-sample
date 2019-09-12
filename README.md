@@ -1,7 +1,11 @@
 ---
-services: cognitive-services,custom-vision
-platforms: c#, Windows ML, XAML
-author: tobai, kukramer
+page_type: sample
+languages:
+- csharp
+products:
+- azure
+description: "This sample application demonstrates how to take a model exported from the Custom Vision Service in the ONNX format and add it to an application for real-time image classification."
+urlFragment: cognitive-services-onnx12-customvision-sample
 ---
 
 # Sample application for ONNX1.2 models exported from Custom Vision Service
